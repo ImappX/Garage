@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e1013">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Garáž</title>
+<style>
+:root{--bg:#0e1013;--s1:#171a1f;--s2:#20242b;--bd:#2a2f38;--tx:#eef0f3;--mu:#8b93a0;--ac:#34d1a0;--ok:#4cd98a;--wa:#ffb547;--er:#ff5d5d;color-scheme:dark;box-sizing:border-box}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;padding-top:env(safe-area-inset-top,0px)}
+#top{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 6px;max-width:560px;margin:0 auto}
+#top h1{font-size:24px;margin:0;letter-spacing:-.3px}
+.ib{background:var(--s1);border:1px solid var(--bd);color:var(--tx);width:40px;height:40px;border-radius:12px;font-size:18px;padding:0}
+main{max-width:560px;margin:0 auto;padding:6px 18px calc(110px + env(safe-area-inset-bottom,0px))}
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:18px;padding:14px 16px;margin-bottom:12px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.spz{font-weight:800;font-size:19px;letter-spacing:1px}
+.mu{color:var(--mu);font-size:13px}
+.chips{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:10px}
+.chip{font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;background:var(--s2)}
+.ok{color:var(--ok)}.wa{color:var(--wa)}.er{color:var(--er)}.na{color:var(--mu)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;margin-right:6px}
+h2{font-size:15px;color:var(--mu);font-weight:600;margin:22px 0 10px;text-transform:uppercase;letter-spacing:.8px}
+.dl{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:auto auto auto;gap:0 8px}
+.dl .card{padding:12px 10px;margin:0;text-align:center;grid-row:span 3;display:grid;grid-template-rows:subgrid;row-gap:0;align-content:start}
+.dl b{display:block;font-size:15px;margin-top:4px}
+.svc{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--bd)}
+.svc:last-child{border:0}
+.svc .dt{min-width:74px;color:var(--mu);font-size:13px}
+button{font:inherit;border:0;border-radius:12px;padding:11px 16px;background:var(--ac);color:#04251a;font-weight:700;cursor:pointer}
+button.s{background:var(--s2);color:var(--tx);font-weight:600}
+button.d{background:transparent;color:var(--er);border:1px solid var(--er)}
+button.lk{background:none;color:var(--ac);padding:4px 0}
+nav{position:fixed;left:0;right:0;bottom:0;background:rgba(23,26,31,.94);backdrop-filter:blur(14px);border-top:1px solid var(--bd);padding:8px 24px calc(8px + env(safe-area-inset-bottom,0px))}
+nav .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 84px minmax(0,1fr);align-items:end}
+nav .t{background:none;color:var(--mu);font-size:12px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;position:relative}
+nav .t svg{width:24px;height:24px;flex:none}
+nav .t.on{color:var(--ac)}
+nav .t i{position:absolute;top:2px;right:calc(50% - 22px);background:var(--er);color:#fff;font-style:normal;font-size:11px;min-width:17px;height:17px;border-radius:9px;line-height:17px;padding:0 4px}
+#scanbtn{width:68px;height:68px;border-radius:50%;margin:-30px auto 0;font-size:26px;padding:0;display:flex;align-items:center;justify-content:center;line-height:1;box-shadow:0 6px 20px rgba(52,209,160,.4);border:5px solid var(--bg)}
+dialog{border:1px solid var(--bd);border-radius:20px;padding:18px;width:min(520px,94vw);background:var(--s1);color:var(--tx);max-height:92vh}
+dialog::backdrop{background:rgba(0,0,0,.65)}
+dialog h3{margin:0 0 4px;font-size:19px}
+label{display:block;font-size:12px;color:var(--mu);margin:12px 0 4px}
+input,select,textarea{width:100%;font:inherit;padding:11px;border-radius:12px;border:1px solid var(--bd);background:var(--s2);color:var(--tx)}
+.in2{display:flex;gap:6px}.in2 input{flex:1}
+.acts{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+video{width:100%;border-radius:14px;background:#000;max-height:55vh}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.seg button{background:var(--s2);color:var(--mu)}
+.seg button.on{background:var(--ac);color:#04251a}
+#msg{font-size:13px;color:var(--tx);margin-top:8px;min-height:18px}
+.empty{text-align:center;color:var(--mu);padding:50px 10px}
+.back{background:none;color:var(--ac);padding:4px 0;font-weight:600}
+.kv{display:grid;grid-template-columns:minmax(110px,40%) 1fr;gap:12px;align-items:start;padding:8px 0;border-bottom:1px solid var(--bd)}
+.kv:last-child{border:0}.kv span:first-child{color:var(--mu);font-size:13px}.kv span:last-child{text-align:left;font-weight:600;white-space:pre-line;overflow-wrap:anywhere}
+.tech summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:15px;color:var(--mu);font-weight:600;margin:22px 0 10px;text-transform:uppercase;letter-spacing:.8px}
+.tech summary::-webkit-details-marker{display:none}
+.tech summary::after{content:"▾";font-size:18px;transition:transform .2s}
+.tech[open] summary::after{transform:rotate(180deg)}
+textarea{resize:vertical}
+.chip.two{border-radius:14px;line-height:1.35}
+#v{object-fit:cover;aspect-ratio:4/3;max-height:none}
+#guide{position:absolute;left:5%;right:5%;top:38%;height:24%;border:2px solid var(--ac);border-radius:10px;box-shadow:0 0 0 999px rgba(0,0,0,.35);pointer-events:none}
+#v[style*="none"]+#guide{display:none}
+.own{color:var(--wa);font-size:13px;margin-left:8px;font-weight:400}
+#raw{display:none;max-height:180px;overflow:auto;background:var(--s2);border-radius:12px;padding:10px;font-size:11px;white-space:pre-wrap;word-break:break-all;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="top"></div>
+<main id="app"></main>
+
+<nav><div class="in">
+  <button class="t" id="t-list" onclick="go('list')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>Vozidla</button>
+  <button id="scanbtn" onclick="scanMain()" aria-label="Skenovat VIN nebo SPZ"><svg width="30" height="30" viewBox="0 0.5 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+  <button class="t" id="t-alerts" onclick="go('alerts')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Upozornění<i id="cnt" hidden></i></button>
+</div></nav>
+
+<dialog id="dlg">
+  <h3 id="dt">Vozidlo</h3>
+  <label>SPZ</label><div class="in2"><input id="spz" autocapitalize="characters"><button class="s" onclick="scan('spz',v=>el('spz').value=v)">📷</button></div>
+  <label>VIN</label><div class="in2"><input id="vin" autocapitalize="characters" maxlength="17"><button class="s" onclick="scan('vin',v=>el('vin').value=v)">📷</button></div>
+  <div class="acts"><button class="s" id="lkb" onclick="lookup()">Načíst z Datové kostky</button></div>
+  <div id="msg"></div>
+  <label>Název</label><input id="name" placeholder="např. Škoda Octavia">
+  <label>Komu vozidlo patří (volný řádek)</label><input id="owner" placeholder="např. Honza, manželka, firma">
+  <label>Stav tachometru (km)</label><input id="km" type="number" inputmode="numeric">
+  <div id="techf"></div>
+  <label>Konec STK (načte se z Datové kostky)</label><input id="stk" type="date">
+  <label>Konec dálniční známky</label>
+  <div class="in2"><input id="dz" type="date"><button class="s" onclick="checkDz()">Ověřit</button></div>
+  <label>Konec povinného ručení</label><input id="pj" type="date">
+  <div class="acts"><button onclick="save()">Uložit</button><button class="s" onclick="el('dlg').close()">Zavřít</button><button class="d" id="del" onclick="del()">Smazat</button></div>
+</dialog>
+
+<dialog id="sdlg">
+  <h3 id="sdt">Servisní záznam</h3>
+  <label>Datum</label><input id="sd" type="date">
+  <label>Najeto (km)</label><input id="sk" type="number" inputmode="numeric">
+  <label>Popis práce</label><textarea id="st" rows="4" placeholder="Každý úkon na nový řádek, např.&#10;výměna oleje&#10;výměna filtrů"></textarea>
+  <label>Cena (Kč)</label><input id="sc" type="number" inputmode="decimal">
+  <label>Připomenout další servis za (nepovinné)</label>
+  <div class="in2"><input id="siv" type="number" min="0" inputmode="numeric" placeholder="např. 12"><select id="siu" style="max-width:120px"><option value="d">dní</option><option value="m" selected>měsíců</option><option value="y">let</option></select></div>
+  <label>a/nebo po dalších (km)</label><input id="sik" type="number" min="0" inputmode="numeric" placeholder="např. 15000">
+  <div class="acts"><button onclick="saveSvc()">Uložit</button><button class="s" onclick="el('sdlg').close()">Zavřít</button></div>
+</dialog>
+
+<dialog id="cam">
+  <h3>Skenování</h3>
+  <div class="seg"><button id="m-vin" onclick="mode('vin')">VIN</button><button id="m-spz" onclick="mode('spz')">SPZ</button></div>
+  <div style="position:relative;overflow:hidden;border-radius:14px"><video id="v" playsinline muted></video><div id="guide"></div></div>
+  <img id="pimg" alt="Fotografie" style="display:none;width:100%;max-height:55vh;object-fit:contain;border-radius:14px;background:#000">
+  <input type="file" id="pfile" accept="image/*" capture="environment" hidden onchange="photoPicked(this)">
+  <div id="cm" class="mu" style="margin-top:8px"></div>
+  <div id="res" hidden>
+    <label id="resl">Rozpoznáno – můžete opravit</label>
+    <input id="resv" autocapitalize="characters" autocomplete="off">
+    <div id="alts" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div>
+    <div class="acts"><button onclick="resOk()">Ověřit</button><button class="s" onclick="resAgain()">Skenovat znovu</button></div>
+  </div>
+  <div class="acts"><button id="snap" onclick="snap()">Vyfotit</button><button class="s" onclick="el('pfile').click()">Fotoaparát telefonu</button><button class="s" onclick="stopCam()">Zrušit</button></div>
+</dialog>
+
+<dialog id="cf">
+  <p id="cft" style="margin:0 0 4px;white-space:pre-line"></p>
+  <div class="acts"><button class="s" id="cfn">Zrušit</button><button id="cfy">Potvrdit</button></div>
+</dialog>
+
+<dialog id="bk">
+  <h3>Zálohy</h3>
+  <div id="bkm" class="mu"></div>
+  <h2 style="margin-top:14px">Do telefonu</h2>
+  <div class="acts" style="margin-top:0"><button onclick="exportFile()">Exportovat do souboru</button><button class="s" onclick="el('bkf').click()">Importovat ze souboru</button></div>
+  <input type="file" id="bkf" accept="application/json,.json" hidden onchange="importFile(this)">
+  <h2>GitHub (soukromý repozitář)</h2>
+  <label>Repozitář (uživatel/repo)</label><input id="bk_repo" placeholder="jmeno/garaz-data" autocapitalize="none">
+  <label>Soubor v repozitáři</label><input id="bk_path" autocapitalize="none">
+  <label>Token (fine-grained, jen Contents: Read and write)</label><input id="bk_tok" type="password">
+  <div class="acts"><button onclick="bkRun(ghBackup)">Zálohovat</button><button class="s" onclick="bkRun(ghRestore)">Obnovit</button></div>
+  <h2>Vlastní server (Render)</h2>
+  <label>Adresa serveru</label><input id="bk_url" placeholder="https://garaz.onrender.com" autocapitalize="none">
+  <label>Token (APP_TOKEN ze serveru)</label><input id="bk_stok" type="password">
+  <div class="acts"><button onclick="bkRun(svBackup)">Zálohovat</button><button class="s" onclick="bkRun(svRestore)">Obnovit</button></div>
+  <p class="mu">Pozor: na bezplatném Renderu se soubory po restartu nebo novém nasazení mažou. Jako trvalou zálohu používejte GitHub nebo soubor v telefonu.</p>
+  <label style="display:flex;gap:8px;align-items:center;margin-top:12px"><input id="bk_auto" type="checkbox" style="width:auto"> Po každé změně zálohovat automaticky (GitHub / server, pokud jsou vyplněné)</label>
+  <div class="acts"><button class="s" onclick="bkSave();el('bk').close()">Zavřít</button></div>
+</dialog>
+
+<dialog id="set">
+  <h3>Nastavení</h3>
+  <label>Upozornit předem (dní)</label><input id="nd" type="number" min="1" max="120">
+  <label>Datová kostka – API klíč</label><input id="key" type="password">
+  <label>Datová kostka – URL endpointu</label><input id="ep">
+  <p class="mu">Údaje se ukládají jen v tomto zařízení. Pokud máte v Zálohách (💾) vyplněný server, načítání z Datové kostky půjde automaticky přes něj a klíč zůstane na serveru. Klíč k Datové kostce dostanete e-mailem po registraci na dataovozidlech.cz/registraceapi.</p>
+  <div class="acts"><button onclick="saveSet()">Uložit</button><button class="s" onclick="el('set').close()">Zavřít</button></div>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<script>
+const el=id=>document.getElementById(id);
+const EP='https://api.dataovozidlech.cz/api/vehicletechnicaldata/v2';
+const DL=[['stk','STK'],['dz','Dálniční známka'],['pj','Povinné ručení']];
+const TECH=[['reg','Datum 1. registrace','date'],['motor','Typ motoru'],['objem','Zdvihový objem [cm³]'],['vykon','Max. výkon [kW] / [min⁻¹]'],['palivo','Palivo'],['kola','Kola a pneumatiky na nápravě – rozměry/montáž [N.1; N.2; N.3; N.4]','area'],['varp','Další záznamy','area']];
+let lastRaw='',svcId=null,svcEdit=false,techOpen=false,svcOpen=true;
+let cars=[],view='list',curId=null,editing=null,stream=null,target='vin',onScan=null,worker=null,scanConfirm=false,runId=0;
+
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+function load(){try{cars=JSON.parse(ls('cars')||'[]')}catch(e){cars=[]}}
+function persist(){ls('cars',JSON.stringify(cars));autoBk()}
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const lim=()=>+ls('nd')||30;
+const fd=d=>d?new Date(d+'T00:00:00').toLocaleDateString('cs-CZ'):'';
+const car=id=>cars.find(c=>c.id===id);
+function days(d){if(!d)return null;const n=new Date();n.setHours(0,0,0,0);return Math.round((new Date(d+'T00:00:00')-n)/864e5)}
+function cls(n){return n===null?'na':n<0?'er':n<=lim()?'wa':'ok'}
+function txt(d){const n=days(d);return n===null?'nezadáno':n<0?`prošlo ${-n} d`:n===0?'dnes':`za ${n} d`}
+function recNext(r){
+  let d=null,km=null;const v=+r.iv;
+  if(v&&r.date){const t=new Date(r.date+'T00:00:00');
+    if(r.iu==='d')t.setDate(t.getDate()+v);else t.setMonth(t.getMonth()+v*(r.iu==='y'?12:1));
+    d=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')}
+  if(+r.ik&&+r.km)km=+r.km+ +r.ik;
+  return (d||km)?{d,km}:null;
+}
+function activeRec(c){return [...(c.svc||[])].filter(r=>recNext(r)).sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0]}
+function nextSvc(c){const r=activeRec(c);return r?recNext(r):null}
+function nsLine(r){const s=recNext(r);return [s.d&&fd(s.d)+' ('+txt(s.d)+')',s.km&&'při '+s.km.toLocaleString('cs-CZ')+' km'].filter(Boolean).join(' nebo ')}
+function svcCls(c,s){const o={ok:0,wa:1,er:2},a=[];if(s.d)a.push(cls(days(s.d)));if(s.km&&c.km){const r=s.km-(+c.km);a.push(r<=0?'er':r<=1000?'wa':'ok')}return a.sort((x,y)=>o[y]-o[x])[0]||'ok'}
+function toggleSvcEdit(){svcEdit=!svcEdit;render()}
+function alerts(){
+  const a=[];
+  cars.forEach(c=>{
+    DL.forEach(([k,l])=>{const n=days(c[k]);if(n!==null&&n<=lim())a.push({c,l,d:c[k],n})});
+    const s=nextSvc(c);
+    if(s){
+      if(s.d){const n=days(s.d);if(n<=lim())a.push({c,l:'Další servis',d:s.d,n})}
+      if(s.km&&c.km){const r=s.km-(+c.km);if(r<=1000)a.push({c,l:'Další servis (km)',d:null,n:r<=0?-1:lim(),t:r<=0?`překročeno o ${-r} km`:`zbývá ${r} km`})}
+    }
+  });
+  return a.sort((x,y)=>x.n-y.n);
+}
+function soon(c){const s=nextSvc(c);return Math.min(9999,...DL.map(([k])=>days(c[k])).filter(n=>n!==null),...(s&&s.d?[days(s.d)]:[]))}
+
+function go(v,id){svcEdit=false;view=v;curId=id||curId;render();scrollTo(0,0)}
+function svcChip(c){
+  const s=nextSvc(c);
+  if(!s)return '<span class="chip"><span class="na"><span class="dot"></span>Servis · —</span></span>';
+  const c1=s.d?cls(days(s.d)):'na';
+  const l2=s.km?`při ${s.km.toLocaleString('cs-CZ')} km`:'';
+  return `<span class="chip two"><span class="${c1}"><span class="dot"></span>${s.d?'Servis · '+txt(s.d):'Servis'}</span>${l2?`<br><span class="mu" style="padding-left:14px;font-weight:500">${l2}</span>`:''}</span>`;
+}
+function render(){
+  const a=alerts(),cnt=el('cnt');
+  cnt.hidden=!a.length;cnt.textContent=a.length;
+  el('t-list').classList.toggle('on',view==='list'||view==='detail');
+  el('t-alerts').classList.toggle('on',view==='alerts');
+  const top=el('top'),app=el('app');
+  top.innerHTML=`<h1>${view==='alerts'?'Upozornění':view==='detail'?'Detail':'Moje vozidla'}</h1><div class="row"><button class="ib" onclick="openBk()">💾</button><button class="ib" onclick="openSet()">⚙️</button>${view==='list'?'<button class="ib" onclick="edit()">＋</button>':''}</div>`;
+  if(view==='detail'&&car(curId))return detail(app,car(curId));
+  if(view==='alerts')return alertsView(app,a);
+  if(!cars.length){app.innerHTML='<div class="empty">Zatím žádná vozidla.<br>Naskenujte VIN nebo SPZ tlačítkem dole,<br>nebo přidejte vozidlo přes ＋.</div>';return}
+  app.innerHTML=[...cars].sort((x,y)=>soon(x)-soon(y)).map(c=>`
+  <div class="card" onclick="go('detail','${c.id}')">
+    <div class="row"><span><span class="spz">${esc(c.spz)||'—'}</span>${c.owner?`<span class="own">${esc(c.owner)}</span>`:''}</span></div>
+    <div>${esc(c.name)}</div>
+    <div class="mu">${esc(c.vin)}${c.km?' · '+(+c.km).toLocaleString('cs-CZ')+' km':''}</div>
+    <div class="chips">${DL.filter(([k])=>k!=='pj').map(([k,l])=>`<span class="chip ${cls(days(c[k]))}"><span class="dot"></span>${l} · ${c[k]?txt(c[k]):'—'}</span>`).join('')}${svcChip(c)}</div>
+  </div>`).join('');
+}
+function alertsView(app,a){
+  let h='';
+  if('Notification' in window&&Notification.permission!=='granted')h+='<div class="card"><div class="row"><span class="mu">Oznámení na zařízení jsou vypnutá.</span><button onclick="askNotif()">Zapnout</button></div></div>';
+  h+=a.length?a.map(x=>`<div class="card" onclick="go('detail','${x.c.id}')"><div class="row"><span class="spz">${esc(x.c.spz)||esc(x.c.name)}</span><span class="${cls(x.n)}" style="font-weight:700">${x.t||txt(x.d)}</span></div><div class="mu">${x.l}${x.d?' · '+fd(x.d):''}</div></div>`).join(''):`<div class="empty">✅ Nic nevyprší v příštích ${lim()} dnech.</div>`;
+  app.innerHTML=h;
+}
+function detail(app,c){
+  const tot=(c.svc||[]).reduce((s,x)=>s+(+x.cost||0),0),act=activeRec(c);
+  const sv=[...(c.svc||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const nx=x=>{const s=recNext(x);if(!s)return '';const on=x===act;return `<div class="${on?svcCls(c,s):'mu'}" style="font-size:13px;margin-top:4px;${on?'font-weight:600':''}">🔔 Další servis: ${nsLine(x)}${on?'':' (nahrazeno novějším)'}</div>`};
+  app.innerHTML=`<button class="back" onclick="go('list')">‹ Zpět</button>
+  <div class="card"><div class="row"><span><span class="spz">${esc(c.spz)||'—'}</span>${c.owner?`<span class="own">${esc(c.owner)}</span>`:''}</span><button class="s" onclick="edit('${c.id}')">Upravit</button></div>
+    <div>${esc(c.name)}</div><div class="mu">${esc(c.vin)}${c.km?' · '+(+c.km).toLocaleString('cs-CZ')+' km':''}</div></div>
+  <h2>Termíny</h2>
+  <div class="dl">${DL.map(([k,l])=>`<div class="card"><span class="mu">${l}</span><b class="${cls(days(c[k]))}">${c[k]?txt(c[k]):'—'}</b><span class="mu">${fd(c[k])}</span></div>`).join('')}</div>
+  <details class="tech" ${techOpen?'open':''} ontoggle="techOpen=this.open"><summary>Technické údaje</summary>
+  <div class="card">${TECH.map(([k,l,t])=>`<div class="kv"><span>${l}</span><span>${c[k]?(t==='date'?fd(c[k]):esc(c[k])):'—'}</span></div>`).join('')}</div></details>
+  <details class="tech" ${svcOpen?'open':''} ontoggle="svcOpen=this.open"><summary>Servisní historie</summary>
+  <div class="card">${sv.length?sv.map(x=>`<div class="svc"><div class="dt">${fd(x.date)}${x.km?'<br>'+(+x.km).toLocaleString('cs-CZ')+' km':''}</div><div style="flex:1"><div style="white-space:pre-line">${esc(x.text)}</div>${x.cost?`<div class="mu">${(+x.cost).toLocaleString('cs-CZ')} Kč</div>`:''}${nx(x)}</div>${svcEdit?`<button class="lk" onclick="openSvc('${x.id}')">✎</button><button class="lk" onclick="delSvc('${c.id}','${x.id}')">✕</button>`:''}</div>`).join(''):'<div class="mu">Zatím žádné záznamy.</div>'}
+  ${tot?`<div class="mu" style="margin-top:8px">Celkem: ${tot.toLocaleString('cs-CZ')} Kč</div>`:''}
+  <div class="acts"><button onclick="openSvc()">＋ Přidat záznam</button>${sv.length?`<button class="s" onclick="toggleSvcEdit()">${svcEdit?'Hotovo':'✎ Upravit'}</button>`:''}</div></div></details>
+  <div class="acts" style="margin-top:28px"><button class="s" onclick="exportIcs('${c.id}')">Přidat do kalendáře</button><button class="d" onclick="delCar('${c.id}')">Smazat vozidlo</button></div>`;
+}
+
+/* ---- vozidlo ---- */
+function edit(id){
+  wake();
+  editing=car(id)||null;const c=editing||{};
+  el('dt').textContent=editing?'Upravit vozidlo':'Nové vozidlo';
+  ['spz','vin','name','owner','km','stk','dz','pj'].forEach(k=>el(k).value=c[k]||'');TECH.forEach(([k])=>el('t_'+k).value=c[k]||'');
+  el('del').style.display=editing?'':'none';el('msg').textContent='';
+  el('dlg').showModal();
+}
+function save(){
+  const c=editing||{id:String(Date.now()),svc:[]};
+  c.spz=el('spz').value.toUpperCase().replace(/\s/g,'');c.vin=el('vin').value.toUpperCase().trim();
+  ['name','owner','km','stk','dz','pj'].forEach(k=>c[k]=el(k).value.trim());TECH.forEach(([k])=>c[k]=el('t_'+k).value.trim());
+  if(!editing)cars.push(c);
+  persist();el('dlg').close();curId=c.id;render();
+}
+function exportIcs(id){
+  const c=car(id);if(!c)return;
+  const ymd=d=>d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+  const esc=t=>String(t).replace(/([,;\\])/g,'\\$1').replace(/\n/g,'\\n');
+  const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+  const nm=c.spz||c.name||'vozidlo',L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Garaz//CS','CALSCALE:GREGORIAN'];
+  let n=0;
+  const add=(k,l,d)=>{
+    if(!d)return;n++;
+    const nx=new Date(d+'T00:00:00');nx.setDate(nx.getDate()+1);
+    L.push('BEGIN:VEVENT','UID:'+c.id+'-'+k+'@garaz','DTSTAMP:'+stamp,'DTSTART;VALUE=DATE:'+d.replace(/-/g,''),'DTEND;VALUE=DATE:'+ymd(nx),'SUMMARY:'+esc(l+' – '+nm));
+    [30,7].forEach(m=>L.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+esc(l+' za '+m+' dní'),'TRIGGER:-P'+(m-1)+'DT15H','END:VALARM'));
+    L.push('END:VEVENT');
+  };
+  DL.forEach(([k,l])=>add(k,l,c[k]));
+  const s=nextSvc(c);if(s&&s.d)add('svc','Další servis',s.d);
+  if(!n){ask('U tohoto vozidla zatím není vyplněný žádný termín.');return}
+  L.push('END:VCALENDAR');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([L.join('\r\n')+'\r\n'],{type:'text/calendar'}));
+  a.download='garaz-'+nm.replace(/[^A-Za-z0-9]/g,'')+'.ics';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  ask('Soubor s termíny ('+n+') je uložen. Otevřete ho v telefonu a přidejte události do Kalendáře. Po změně termínů ho vytvořte znovu.');
+}
+function ask(msg,ok,no){
+  const d=el('cf');el('cft').textContent=msg;
+  el('cfn').style.display=ok?'':'none';
+  el('cfy').textContent=ok?'Potvrdit':'OK';
+  el('cfy').onclick=()=>{d.close();if(ok)ok()};
+  el('cfn').onclick=()=>{d.close();if(no)no()};
+  d.showModal();
+}
+function delCar(id){
+  const c=car(id);
+  if(c)ask(`Smazat vozidlo ${c.spz||c.name||''} včetně servisní historie? Nelze vrátit zpět.`,()=>{cars=cars.filter(x=>x!==c);persist();go('list')})
+}
+function del(){if(!editing)return;const e=editing;ask('Smazat vozidlo včetně historie?',()=>{cars=cars.filter(c=>c!==e);persist();el('dlg').close();go('list')})}
+function openSvc(id){
+  const c=car(curId),r=(c.svc||[]).find(x=>x.id===id);svcId=r?r.id:null;
+  el('sdt').textContent=r?'Upravit servisní záznam':'Servisní záznam';
+  el('sd').value=r?r.date||'':new Date().toISOString().slice(0,10);
+  el('sk').value=r?r.km||'':c.km||'';
+  el('st').value=r?r.text||'':'';el('sc').value=r?r.cost||'':'';
+  el('siv').value=r?r.iv||'':'';el('siu').value=r?r.iu||'m':'m';el('sik').value=r?r.ik||'':'';
+  el('sdlg').showModal();
+}
+function saveSvc(){
+  const c=car(curId);if(!el('st').value.trim())return;
+  const d={date:el('sd').value,km:el('sk').value,text:el('st').value.trim(),cost:el('sc').value,iv:el('siv').value,iu:el('siu').value,ik:el('sik').value};
+  c.svc=c.svc||[];
+  if(svcId)Object.assign(c.svc.find(x=>x.id===svcId),d);else c.svc.push(Object.assign({id:String(Date.now())},d));
+  if(+d.km>(+c.km||0))c.km=d.km;
+  persist();el('sdlg').close();render();
+}
+function delSvc(cid,sid){ask('Smazat servisní záznam?',()=>{const c=car(cid);c.svc=c.svc.filter(x=>x.id!==sid);persist();render()})}
+
+/* ---- kamera ---- */
+function mode(m){target=m;el('m-vin').classList.toggle('on',m==='vin');el('m-spz').classList.toggle('on',m==='spz');el('cm').textContent=m==='vin'?'Zarovnejte VIN do zeleného rámečku a klepněte na Vyfotit.':'Zarovnejte SPZ do zeleného rámečku a klepněte na Vyfotit.'}
+async function startLive(){
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920}},audio:false})}
+  catch(e){stream=null;return false}
+  el('v').srcObject=stream;await el('v').play();return true;
+}
+async function scan(t,cb,conf){
+  wake();onScan=cb;scanConfirm=!!conf;
+  const ok=await startLive();
+  mode(t);el('res').hidden=true;el('pimg').style.display='none';
+  el('v').style.display=ok?'':'none';el('snap').style.display=ok?'':'none';el('snap').disabled=false;
+  if(!ok)el('cm').textContent='Živá kamera není dostupná. Použijte tlačítko Fotoaparát telefonu.';
+  el('cam').showModal();
+}
+function vinsIn(t){
+  const out=[],fix=x=>x.toUpperCase().replace(/[OQ]/g,'0').replace(/I/g,'1'),ok=w=>/^[A-HJ-NPR-Z0-9]{17}$/.test(w);
+  const lines=t.split('\n');
+  lines.forEach(l=>{
+    const toks=fix(l).split(/[^A-Z0-9]+/).filter(Boolean);
+    toks.forEach(w=>{if(ok(w))out.push(w,w,w)});
+    for(let i=0;i<toks.length;i++){let c='';for(let j=i;j<toks.length&&c.length<17;j++){c+=toks[j];if(c.length===17&&j>i&&ok(c))out.push(c,c)}}
+  });
+  if(!out.length){
+    lines.map(l=>fix(l).replace(/[^A-Z0-9]/g,'')).concat([fix(t).replace(/[^A-Z0-9]/g,'')]).forEach(l=>{for(let i=0;i+17<=l.length;i++){const w=l.slice(i,i+17);if(ok(w))out.push(w)}});
+  }
+  return out;
+}
+function spzIn(t){
+  const out=[];
+  t.toUpperCase().split('\n').map(l=>l.replace(/[^A-Z0-9]/g,'')).forEach(l=>{(l.match(/[0-9][A-Z][A-Z0-9][0-9]{4}/g)||[]).forEach(x=>out.push(x))});
+  return out;
+}
+function prep(src,mode){
+  const k=Math.min(3,Math.max(1,1800/src.width)),w=Math.round(src.width*k),h=Math.round(src.height*k);
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(src,0,0,w,h);
+  const im=x.getImageData(0,0,w,h),a=im.data,g=new Uint8Array(w*h),hist=new Uint32Array(256);
+  for(let i=0,j=0;i<a.length;i+=4,j++){const v=(a[i]*.299+a[i+1]*.587+a[i+2]*.114)|0;g[j]=v;hist[v]++}
+  const tot=g.length;let map;
+  if(mode==='gray'){
+    let acc=0,lo=0,hi=255;
+    for(let i=0;i<256;i++){acc+=hist[i];if(acc>=tot*.02){lo=i;break}}
+    acc=0;for(let i=255;i>=0;i--){acc+=hist[i];if(acc>=tot*.02){hi=i;break}}
+    const r=Math.max(1,hi-lo);map=v=>Math.max(0,Math.min(255,(v-lo)*255/r));
+  }else{
+    let sum=0;for(let i=0;i<256;i++)sum+=i*hist[i];
+    let wB=0,sB=0,mx=0,th=128;
+    for(let t=0;t<256;t++){wB+=hist[t];if(!wB)continue;const wF=tot-wB;if(!wF)break;sB+=t*hist[t];const mB=sB/wB,mF=(sum-sB)/wF,vv=wB*wF*(mB-mF)*(mB-mF);if(vv>mx){mx=vv;th=t}}
+    map=mode==='inv'?(v=>v>th?0:255):(v=>v>th?255:0);
+  }
+  for(let i=0,j=0;i<a.length;i+=4,j++){const v=map(g[j]);a[i]=a[i+1]=a[i+2]=v;a[i+3]=255}
+  x.putImageData(im,0,0);return c;
+}
+async function recognize(jobs){
+  const my=++runId,vin=target==='vin',inn=vin?vinsIn:spzIn;
+  const wl=vin?'ABCDEFGHJKLMNPRSTUVWXYZ0123456789':'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ';
+  try{
+    if(!window.Tesseract)throw new Error('OCR knihovna se nenačetla (je potřeba internet).');
+    if(!worker)worker=await Tesseract.createWorker('eng');
+    const votes={};let n=0,best=null;
+    for(const modes of [['gray'],['bin','inv']]){
+      for(const j of jobs)for(const m of modes){
+        if(my!==runId)return;
+        el('cm').textContent='Rozpoznávám… ('+(++n)+')';
+        await worker.setParameters({tessedit_char_whitelist:wl,tessedit_pageseg_mode:j.psm,user_defined_dpi:'300'});
+        const r=await worker.recognize(prep(j.cv,m));
+        inn(r.data.text).forEach(x=>votes[x]=(votes[x]||0)+1);
+      }
+      const ranked=Object.keys(votes).sort((a,b)=>votes[b]-votes[a]);
+      if(ranked.length){best=ranked;break}
+    }
+    if(my!==runId)return;
+    if(best){if(scanConfirm)showRes(best[0],best.slice(1,4));else{const cb=onScan;stopCam();cb&&cb(best[0])}}
+    else{el('cm').textContent='Nic jsem nenašel. Zkuste blíž, rovně, bez odlesků a text do zeleného rámečku.';el('snap').disabled=false}
+  }catch(e){el('cm').textContent='Chyba: '+e.message;el('snap').disabled=false}
+}
+async function photoPicked(inp){
+  const f=inp.files[0];inp.value='';if(!f)return;
+  el('cm').textContent='Načítám fotku…';
+  try{
+    const bmp=await createImageBitmap(f,{imageOrientation:'from-image'});
+    const sc=Math.min(1,2200/Math.max(bmp.width,bmp.height));
+    const cv=document.createElement('canvas');cv.width=Math.round(bmp.width*sc);cv.height=Math.round(bmp.height*sc);
+    cv.getContext('2d').drawImage(bmp,0,0,cv.width,cv.height);
+    if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+    el('pimg').src=URL.createObjectURL(f);el('pimg').style.display='block';
+    el('v').style.display='none';el('snap').style.display='none';
+    const jobs=[];
+    for(let i=0;i<6;i++){
+      const y=Math.round(cv.height*.14*i),h=Math.min(Math.round(cv.height*.22),cv.height-y);
+      const b=document.createElement('canvas');b.width=cv.width;b.height=h;
+      b.getContext('2d').drawImage(cv,0,y,cv.width,h,0,0,cv.width,h);
+      jobs.push({cv:b,psm:7});
+    }
+    jobs.push({cv,psm:11});
+    await recognize(jobs);
+  }catch(e){el('cm').textContent='Chyba: '+e.message}
+}
+function scanMain(){scan('vin',v=>{
+  const k=target==='vin'?'vin':'spz',c=cars.find(x=>x[k]===v);
+  if(c){go('detail',c.id)}else{edit();el(k).value=v;if(k==='vin'&&v.length===17)lookup()}
+},true)}
+function showRes(f,alts){
+  el('resl').textContent=(target==='vin'?'VIN':'SPZ')+' – rozpoznáno, můžete opravit';
+  el('resv').value=f;el('res').hidden=false;el('snap').style.display='none';el('v').pause();
+  el('alts').innerHTML=(alts||[]).map(a=>`<button class="s" style="padding:6px 10px" onclick="el('resv').value='${a}'">${a}</button>`).join('');
+  el('cm').textContent=(alts&&alts.length?'Našel jsem i jiné možnosti, klepnutím je vyberete. ':'')+'Zkontrolujte údaj a klepněte na Ověřit.';
+}
+function resOk(){
+  const v=el('resv').value.toUpperCase().replace(/\s/g,'');
+  if(!v)return;
+  if(target==='vin'&&v.length!==17){el('cm').textContent='VIN musí mít 17 znaků (teď '+v.length+').';return}
+  const cb=onScan;stopCam();cb&&cb(v);
+}
+async function resAgain(){
+  el('res').hidden=true;el('pimg').style.display='none';
+  const ok=stream?true:await startLive();
+  el('v').style.display=ok?'':'none';el('snap').style.display=ok?'':'none';el('snap').disabled=false;
+  if(ok)el('v').play();
+  mode(target);
+  if(!ok)el('cm').textContent='Živá kamera není dostupná. Použijte tlačítko Fotoaparát telefonu.';
+}
+function stopCam(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}el('res').hidden=true;el('pimg').style.display='none';el('v').style.display='';el('snap').style.display='';scanConfirm=false;runId++;el('cam').close()}
+async function snap(){
+  const v=el('v');if(!v.videoWidth)return;
+  const vr=v.getBoundingClientRect(),gr=el('guide').getBoundingClientRect();
+  const sc=Math.max(vr.width/v.videoWidth,vr.height/v.videoHeight);
+  const ox=(vr.width-v.videoWidth*sc)/2,oy=(vr.height-v.videoHeight*sc)/2;
+  let sx=Math.max(0,(gr.left-vr.left-ox)/sc),sy=Math.max(0,(gr.top-vr.top-oy)/sc);
+  const sw=Math.min(gr.width/sc,v.videoWidth-sx),sh=Math.min(gr.height/sc,v.videoHeight-sy);
+  const crop=document.createElement('canvas');crop.width=Math.max(1,Math.round(sw));crop.height=Math.max(1,Math.round(sh));
+  crop.getContext('2d').drawImage(v,sx,sy,sw,sh,0,0,crop.width,crop.height);
+  el('snap').disabled=true;
+  await recognize([{cv:crop,psm:7}]);
+}
+function findVin(t){const s=t.toUpperCase().replace(/[^A-Z0-9\n ]/g,'').replace(/[OQ]/g,'0').replace(/I/g,'1').replace(/\s+/g,'');const m=s.match(/[A-HJ-NPR-Z0-9]{17}/);return m?m[0]:null}
+function findSpz(t){const s=t.toUpperCase().replace(/[^A-Z0-9\n ]/g,'');const m=s.match(/\b[0-9][A-Z][A-Z0-9]\s?[0-9]{4}\b/)||s.match(/\b[A-Z0-9]{2,3}\s?[A-Z0-9]{4}\b/);return m?m[0].replace(/\s/g,''):null}
+
+/* ---- Datová kostka ---- */
+function pickDate(v){if(typeof v!=='string')return null;let m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return `${m[1]}-${m[2]}-${m[3]}`;m=v.match(/^(\d{1,2})\.\s?(\d{1,2})\.\s?(\d{4})/);return m?`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`:null}
+function walk(o,f){if(o&&typeof o==='object')for(const k in o){f(k,o[k]);walk(o[k],f)}}
+async function lookup(){
+  const b=el('lkb');b.disabled=true;b.textContent='Načítám…';
+  try{await lookupRun()}finally{b.disabled=false;b.textContent='Načíst z Datové kostky'}
+}
+async function lookupRun(){
+  const vin=el('vin').value.trim().toUpperCase(),m=el('msg'),sv=(ls('sv_url')||'').replace(/\/$/,'');
+  let key=ls('dk_key'),ep=ls('dk_ep')||EP;
+  if(sv&&ep===EP){ep=sv+'/api/vin';key=ls('sv_tok')||''}
+  if(vin.length!==17){m.textContent='Zadejte nebo naskenujte 17místný VIN.';return}
+  if(!key&&(ep===EP||sv)){m.textContent=sv?'Vyplňte token serveru v Zálohách (💾).':'Nejdřív vyplňte API klíč v Nastavení (⚙️). Klíč získáte registrací na dataovozidlech.cz/registraceapi.';return}
+  m.textContent='Načítám z Datové kostky…';
+  try{
+    const r=await fetch(ep+(ep.includes('?')?'&':'?')+'vin='+encodeURIComponent(vin),{headers:key?{api_key:key,Accept:'application/json'}:{Accept:'application/json'}});
+    const txt=await r.text();let j=null;try{j=JSON.parse(txt)}catch(e){}
+    if(r.status===401||r.status===403)throw new Error('neplatný nebo nepovolený API klíč');
+    if(r.status===429||/maxim[aá]ln[ií] po[cč]et po[zž]adavk/i.test(txt))throw new Error('překročen limit dotazů (27 za minutu), zkuste to za chvíli');
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const d=j&&j.Data;
+    if(!d||!d.VIN){m.textContent='Vozidlo s tímto VIN se v registru nenašlo. Zkontrolujte VIN.';return}
+    const set=(id,v)=>{if(v!==null&&v!==undefined&&String(v).trim()!==''){el(id).value=String(v).trim();return 1}return 0};
+    const nm=[d.TovarniZnacka,d.ObchodniOznaceni].filter(Boolean).join(' ');
+    let cnt=0;
+    if(nm&&!el('name').value){el('name').value=nm;cnt++}
+    cnt+=set('t_reg',pickDate(d.DatumPrvniRegistrace));
+    cnt+=set('t_motor',d.MotorTyp);
+    cnt+=set('t_objem',d.MotorZdvihObjem);
+    cnt+=set('t_vykon',d.MotorMaxVykon);
+    cnt+=set('t_palivo',d.Palivo);
+    const kola=String(d.NapravyPneuRafky||'').split(/;\s*/).map((x,i)=>({x:x.trim(),i})).filter(o=>o.x.replace(/[\/\s]/g,'')).slice(0,4).map(o=>'N.'+(o.i+1)+': '+o.x).join('\n');
+    cnt+=set('t_kola',kola);
+    const dz=String(d.DalsiZaznamy||''),vm=dz.match(/variabiln[ií]\s+proveden[ií]\s+vozidla\s*:?/i);
+    cnt+=set('t_varp',vm?dz.slice(vm.index+vm[0].length).trim():'');
+    const stk=pickDate(d.PravidelnaTechnickaProhlidkaDo);
+    cnt+=set('stk',stk);
+    m.textContent='Načteno: '+(nm||vin)+'. Vyplněno polí: '+cnt+'.'+(stk?'':' Platnost STK v registru není, doplňte ji ručně.');
+  }catch(e){
+    m.textContent=(e instanceof TypeError)?'Prohlížeč požadavek zablokoval (pravděpodobně CORS). Použijte server na Renderu: 💾 → Vlastní server.':'Načtení selhalo: '+e.message+'.';
+  }
+}
+function checkDz(){window.open('https://edalnice.cz','_blank','noopener');el('msg').textContent='Otevřen web edalnice.cz – konec platnosti zapište ručně.'}
+
+/* ---- nastavení a oznámení ---- */
+function openSet(){el('nd').value=lim();el('key').value=ls('dk_key')||'';el('ep').value=ls('dk_ep')||EP;el('set').showModal()}
+function saveSet(){ls('nd',el('nd').value||30);ls('dk_key',el('key').value.trim());ls('dk_ep',el('ep').value.trim()||EP);el('set').close();render()}
+async function askNotif(){if('Notification' in window){await Notification.requestPermission();render();notify()}}
+function notify(){
+  const a=alerts(),today=new Date().toISOString().slice(0,10);
+  if(!a.length||!('Notification' in window)||Notification.permission!=='granted'||ls('lastn')===today)return;
+  const body=a.slice(0,4).map(x=>`${x.c.spz||x.c.name}: ${x.l} ${x.t||txt(x.d)}`).join('\n'),title='Garáž: blíží se termíny';
+  (async()=>{
+    const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();
+    if(reg)await reg.showNotification(title,{body,icon:'icon-192.png',tag:'garaz'});else new Notification(title,{body});
+  })().then(()=>ls('lastn',today)).catch(()=>{});
+}
+/* ---- zálohy ---- */
+const enc=t=>{let b='';new TextEncoder().encode(t).forEach(x=>b+=String.fromCharCode(x));return btoa(b)};
+const dec=b=>new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\s/g,'')),c=>c.charCodeAt(0)));
+const pack=()=>JSON.stringify({app:'garaz',v:1,saved:new Date().toISOString(),cars},null,1);
+const BK=[['gh_repo','bk_repo'],['gh_path','bk_path'],['gh_tok','bk_tok'],['sv_url','bk_url'],['sv_tok','bk_stok']];
+const bm=t=>el('bkm').textContent=t;
+const stamp=()=>ls('lastbk',new Date().toISOString());
+function openBk(){
+  BK.forEach(([k,i])=>el(i).value=ls(k)||'');
+  el('bk_path').value=ls('gh_path')||'garaz-backup.json';
+  el('bk_auto').checked=ls('autobk')==='1';
+  bm(ls('lastbk')?'Poslední záloha: '+new Date(ls('lastbk')).toLocaleString('cs-CZ'):'Záloha zatím neproběhla.');
+  el('bk').showModal();
+}
+function bkSave(){BK.forEach(([k,i])=>ls(k,el(i).value.trim()));ls('autobk',el('bk_auto').checked?'1':'0')}
+async function bkRun(fn){bkSave();bm('Pracuji…');try{await fn()}catch(e){bm('Chyba: '+e.message)}}
+function exportFile(){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([pack()],{type:'application/json'}));
+  a.download='garaz-zaloha-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  stamp();bm('Soubor uložen (složka Stažené soubory).');
+}
+function importFile(inp){
+  const f=inp.files[0];if(!f)return;
+  f.text().then(t=>applyBackup(JSON.parse(t))).catch(e=>bm('Soubor se nepodařilo načíst: '+e.message)).finally(()=>inp.value='');
+}
+function applyBackup(j){
+  if(!j||!Array.isArray(j.cars))throw new Error('neplatná záloha');
+  ask(`Nahradit současná data zálohou (${j.cars.length} vozidel)?`,()=>{cars=j.cars;persist();render();bm('Obnoveno vozidel: '+j.cars.length+'.')},()=>bm('Obnovení zrušeno.'));
+}
+function ghCfg(){
+  const r=ls('gh_repo'),t=ls('gh_tok');
+  if(!/^[^\/\s]+\/[^\/\s]+$/.test(r||'')||!t)throw new Error('vyplňte repozitář (uživatel/repo) a token');
+  return{u:`https://api.github.com/repos/${r}/contents/${ls('gh_path')||'garaz-backup.json'}`,h:{Authorization:'Bearer '+t,Accept:'application/vnd.github+json'}};
+}
+async function ghGet(g){const r=await fetch(g.u,{headers:g.h,cache:'no-store'});if(r.status===404)return null;if(!r.ok)throw new Error('GitHub odpověděl '+r.status);return r.json()}
+async function ghBackup(silent){
+  const g=ghCfg(),cur=await ghGet(g);
+  const r=await fetch(g.u,{method:'PUT',headers:g.h,body:JSON.stringify(Object.assign({message:'Záloha '+new Date().toISOString(),content:enc(pack())},cur?{sha:cur.sha}:{}))});
+  if(!r.ok)throw new Error('GitHub odpověděl '+r.status);
+  stamp();if(!silent)bm('Zálohováno na GitHub.');
+}
+async function ghRestore(){const j=await ghGet(ghCfg());if(!j)throw new Error('soubor se zálohou na GitHubu není');applyBackup(JSON.parse(dec(j.content)))}
+function svCfg(){
+  const u=(ls('sv_url')||'').replace(/\/$/,''),t=ls('sv_tok');
+  if(!u||!t)throw new Error('vyplňte adresu serveru a token');
+  return{u:u+'/api/backup',h:{Authorization:'Bearer '+t,'Content-Type':'application/json'}};
+}
+async function svBackup(silent){
+  const g=svCfg(),r=await fetch(g.u,{method:'PUT',headers:g.h,body:pack()});
+  if(!r.ok)throw new Error('server odpověděl '+r.status);
+  stamp();if(!silent)bm('Zálohováno na server.');
+}
+async function svRestore(){
+  const g=svCfg(),r=await fetch(g.u,{headers:g.h,cache:'no-store'});
+  if(r.status===404)throw new Error('na serveru zatím žádná záloha není');
+  if(!r.ok)throw new Error('server odpověděl '+r.status);
+  applyBackup(await r.json());
+}
+let abT=null;
+function autoBk(){
+  if(ls('autobk')!=='1')return;clearTimeout(abT);
+  abT=setTimeout(()=>{
+    if(ls('gh_repo')&&ls('gh_tok'))ghBackup(true).catch(()=>{});
+    if(ls('sv_url')&&ls('sv_tok'))svBackup(true).catch(()=>{});
+  },3000);
+}
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+let wakeT=0;
+function wake(){
+  const sv=(ls('sv_url')||'').replace(/\/$/,'');
+  if(!sv||Date.now()-wakeT<4*60*1000)return;
+  wakeT=Date.now();
+  fetch(sv+'/api/ping',{mode:'no-cors',cache:'no-store'}).catch(()=>{});
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)wake()});
+el('cam').addEventListener('cancel',e=>{e.preventDefault();stopCam()});
+el('techf').innerHTML=TECH.map(([k,l,t])=>`<label>${l}</label>${t==='area'?`<textarea id="t_${k}" rows="3"></textarea>`:`<input id="t_${k}"${t==='date'?' type="date"':''}>`}`).join('');
+load();render();notify();wake();
+</script>
+</body>
+</html>
