@@ -91,7 +91,7 @@ textarea{resize:vertical}
 
 <dialog id="dlg">
   <h3 id="dt">Vozidlo</h3>
-  <label>SPZ</label><div class="in2"><input id="spz" autocapitalize="characters"><button class="s" onclick="scan('spz',v=>el('spz').value=v)">📷</button></div>
+  <label>SPZ</label><div class="in2"><input id="spz" autocapitalize="characters" autocomplete="off" placeholder="např. 1AB 2345"><button class="s" onclick="scan('spz',v=>el('spz').value=v)">📷</button></div>
   <label>VIN</label><div class="in2"><input id="vin" autocapitalize="characters" maxlength="17"><button class="s" onclick="scan('vin',v=>el('vin').value=v)">📷</button></div>
   <div class="acts"><button class="s" id="lkb" onclick="lookup()">Načíst z Datové kostky</button></div>
   <div id="msg"></div>
@@ -276,7 +276,7 @@ function edit(id){
 }
 function save(){
   const c=editing||{id:String(Date.now()),svc:[]};
-  c.spz=el('spz').value.toUpperCase().replace(/\s/g,'');c.vin=el('vin').value.toUpperCase().trim();
+  c.spz=el('spz').value.toUpperCase().replace(/\s+/g,' ').trim();c.vin=el('vin').value.toUpperCase().trim();
   ['name','owner','km','stk','dz','pj'].forEach(k=>c[k]=el(k).value.trim());TECH.forEach(([k])=>c[k]=el('t_'+k).value.trim());
   if(!editing)cars.push(c);
   persist();el('dlg').close();curId=c.id;render();
@@ -458,7 +458,7 @@ async function photoPicked(inp){
   }catch(e){el('cm').textContent='Chyba: '+e.message}
 }
 function scanMain(){scan('vin',v=>{
-  const k=target==='vin'?'vin':'spz',c=cars.find(x=>x[k]===v);
+  const k=target==='vin'?'vin':'spz',c=cars.find(x=>String(x[k]||'').replace(/\s/g,'')===v);
   if(c){go('detail',c.id)}else{edit();el(k).value=v;if(k==='vin'&&v.length===17)lookup()}
 },true)}
 function showRes(f,alts,conf){
