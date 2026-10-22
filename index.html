@@ -69,11 +69,17 @@ textarea{resize:vertical}
 #v{object-fit:cover;aspect-ratio:4/3;max-height:none}
 #guide{position:absolute;left:5%;right:5%;top:38%;height:24%;border:2px solid var(--ac);border-radius:10px;box-shadow:0 0 0 999px rgba(0,0,0,.35);pointer-events:none}
 #v[style*="none"]+#guide{display:none}
+#splash{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:var(--mu);font-size:15px;transition:opacity .35s}
+#splash.out{opacity:0;pointer-events:none}
+#splash img{width:112px;height:112px;border-radius:24px}
+.sp-r{width:26px;height:26px;border:3px solid var(--s2);border-top-color:var(--ac);border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
 .own{color:var(--wa);font-size:13px;margin-left:8px;font-weight:400}
 #raw{display:none;max-height:180px;overflow:auto;background:var(--s2);border-radius:12px;padding:10px;font-size:11px;white-space:pre-wrap;word-break:break-all;margin-top:8px}
 </style>
 </head>
 <body>
+<div id="splash"><img src="icon-192.png" alt=""><div class="sp-r"></div><div>Načítám…</div></div>
 <div id="top"></div>
 <main id="app"></main>
 
@@ -121,7 +127,8 @@ textarea{resize:vertical}
   <div id="cm" class="mu" style="margin-top:8px"></div>
   <div id="res" hidden>
     <label id="resl">Rozpoznáno – můžete opravit</label>
-    <input id="resv" autocapitalize="characters" autocomplete="off">
+    <input id="resv" autocapitalize="characters" autocomplete="off" oninput="el('cmap').innerHTML=''">
+    <div id="cmap" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;font-family:ui-monospace,monospace"></div>
     <div id="alts" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div>
     <div class="acts"><button onclick="resOk()">Ověřit</button><button class="s" onclick="resAgain()">Skenovat znovu</button></div>
   </div>
@@ -384,27 +391,48 @@ function prep(src,mode){
   for(let i=0,j=0;i<a.length;i+=4,j++){const v=map(g[j]);a[i]=a[i+1]=a[i+2]=v;a[i+3]=255}
   x.putImageData(im,0,0);return c;
 }
+function voteChars(votes,hits){
+  const keys=Object.keys(votes).filter(k=>k.length===17),cols=[];
+  for(let i=0;i<17;i++)cols.push({});
+  let tot=0;
+  keys.forEach(k=>{const w=votes[k];tot+=w;for(let i=0;i<17;i++)cols[i][k[i]]=(cols[i][k[i]]||0)+w});
+  let str='';const conf=[];
+  for(let i=0;i<17;i++){
+    const e=Object.entries(cols[i]).sort((x,y)=>y[1]-x[1]);
+    str+=e[0][0];let c=e[0][1]/tot;if(hits<2)c=Math.min(c,.4);conf.push(c);
+  }
+  return {str,conf};
+}
 async function recognize(jobs){
   const my=++runId,vin=target==='vin',inn=vin?vinsIn:spzIn;
   const wl=vin?'ABCDEFGHJKLMNPRSTUVWXYZ0123456789':'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ';
   try{
     if(!window.Tesseract)throw new Error('OCR knihovna se nenačetla (je potřeba internet).');
     if(!worker)worker=await Tesseract.createWorker('eng');
-    const votes={};let n=0,best=null;
-    for(const modes of [['gray'],['bin','inv']]){
-      for(const j of jobs)for(const m of modes){
-        if(my!==runId)return;
-        el('cm').textContent='Rozpoznávám… ('+(++n)+')';
-        await worker.setParameters({tessedit_char_whitelist:wl,tessedit_pageseg_mode:j.psm,user_defined_dpi:'300'});
-        const r=await worker.recognize(prep(j.cv,m));
-        inn(r.data.text).forEach(x=>votes[x]=(votes[x]||0)+1);
-      }
-      const ranked=Object.keys(votes).sort((a,b)=>votes[b]-votes[a]);
-      if(ranked.length){best=ranked;break}
+    const votes={};let n=0,hits=0;
+    const run=async(j,m)=>{
+      if(my!==runId)return false;
+      el('cm').textContent='Rozpoznávám… ('+(++n)+')';
+      await worker.setParameters({tessedit_char_whitelist:wl,tessedit_pageseg_mode:j.psm,user_defined_dpi:'300'});
+      const r=await worker.recognize(prep(j.cv,m));
+      const c=inn(r.data.text);
+      if(c.length)hits++;
+      c.forEach(x=>votes[x]=(votes[x]||0)+1);
+      return true;
+    };
+    for(const j of jobs){if(!(await run(j,'gray')))return}
+    if(hits<2){
+      const s2=jobs[0].live?jobs.slice(0,3):jobs;
+      for(const j of s2)for(const m of ['bin','inv']){if(!(await run(j,m)))return}
     }
     if(my!==runId)return;
-    if(best){if(scanConfirm)showRes(best[0],best.slice(1,4));else{const cb=onScan;stopCam();cb&&cb(best[0])}}
-    else{el('cm').textContent='Nic jsem nenašel. Zkuste blíž, rovně, bez odlesků a text do zeleného rámečku.';el('snap').disabled=false}
+    const keys=Object.keys(votes).filter(k=>!vin||k.length===17);
+    if(!keys.length){el('cm').textContent='Nic jsem nenašel. Zkuste blíž, rovně, bez odlesků a text do zeleného rámečku.';el('snap').disabled=false;return}
+    let best,conf=null;
+    const ranked=keys.sort((x,y)=>votes[y]-votes[x]);
+    if(vin){const r=voteChars(votes,hits);best=r.str;conf=r.conf}else best=ranked[0];
+    const alts=ranked.filter(k=>k!==best).slice(0,3);
+    if(scanConfirm)showRes(best,alts,conf);else{const cb=onScan;stopCam();cb&&cb(best)}
   }catch(e){el('cm').textContent='Chyba: '+e.message;el('snap').disabled=false}
 }
 async function photoPicked(inp){
@@ -433,11 +461,16 @@ function scanMain(){scan('vin',v=>{
   const k=target==='vin'?'vin':'spz',c=cars.find(x=>x[k]===v);
   if(c){go('detail',c.id)}else{edit();el(k).value=v;if(k==='vin'&&v.length===17)lookup()}
 },true)}
-function showRes(f,alts){
+function showRes(f,alts,conf){
   el('resl').textContent=(target==='vin'?'VIN':'SPZ')+' – rozpoznáno, můžete opravit';
   el('resv').value=f;el('res').hidden=false;el('snap').style.display='none';el('v').pause();
-  el('alts').innerHTML=(alts||[]).map(a=>`<button class="s" style="padding:6px 10px" onclick="el('resv').value='${a}'">${a}</button>`).join('');
-  el('cm').textContent=(alts&&alts.length?'Našel jsem i jiné možnosti, klepnutím je vyberete. ':'')+'Zkontrolujte údaj a klepněte na Ověřit.';
+  el('cmap').innerHTML=conf?f.split('').map((ch,i)=>{
+    const c=conf[i];let k=c>=.8?'ok':c>=.5?'wa':'er';
+    if(i>=13&&/[BSZGDL]/.test(ch)&&k==='ok')k='wa';
+    return `<span class="${k}" style="padding:2px 5px;border-radius:6px;background:var(--s2);font-weight:700">${ch}</span>`;
+  }).join(''):'';
+  el('alts').innerHTML=(alts||[]).map(a=>`<button class="s" style="padding:6px 10px" onclick="el('resv').value='${a}';el('cmap').innerHTML=''">${a}</button>`).join('');
+  el('cm').textContent=(conf?'Zelené znaky se ve čteních shodly, žluté a červené jsou nejisté, zkontrolujte je podle VIN na voze. ':'')+(alts&&alts.length?'Jiné možnosti vyberete klepnutím. ':'')+'Pak klepněte na Ověřit.';
 }
 function resOk(){
   const v=el('resv').value.toUpperCase().replace(/\s/g,'');
@@ -454,17 +487,27 @@ async function resAgain(){
   if(!ok)el('cm').textContent='Živá kamera není dostupná. Použijte tlačítko Fotoaparát telefonu.';
 }
 function stopCam(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}el('res').hidden=true;el('pimg').style.display='none';el('v').style.display='';el('snap').style.display='';scanConfirm=false;runId++;el('cam').close()}
-async function snap(){
-  const v=el('v');if(!v.videoWidth)return;
-  const vr=v.getBoundingClientRect(),gr=el('guide').getBoundingClientRect();
+function cropGuide(){
+  const v=el('v'),vr=v.getBoundingClientRect(),gr=el('guide').getBoundingClientRect();
   const sc=Math.max(vr.width/v.videoWidth,vr.height/v.videoHeight);
   const ox=(vr.width-v.videoWidth*sc)/2,oy=(vr.height-v.videoHeight*sc)/2;
-  let sx=Math.max(0,(gr.left-vr.left-ox)/sc),sy=Math.max(0,(gr.top-vr.top-oy)/sc);
+  const sx=Math.max(0,(gr.left-vr.left-ox)/sc),sy=Math.max(0,(gr.top-vr.top-oy)/sc);
   const sw=Math.min(gr.width/sc,v.videoWidth-sx),sh=Math.min(gr.height/sc,v.videoHeight-sy);
   const crop=document.createElement('canvas');crop.width=Math.max(1,Math.round(sw));crop.height=Math.max(1,Math.round(sh));
   crop.getContext('2d').drawImage(v,sx,sy,sw,sh,0,0,crop.width,crop.height);
+  return crop;
+}
+async function snap(){
+  const v=el('v');if(!v.videoWidth)return;
   el('snap').disabled=true;
-  await recognize([{cv:crop,psm:7}]);
+  const jobs=[],N=5;
+  for(let i=0;i<N;i++){
+    if(!el('cam').open)return;
+    el('cm').textContent='Držte telefon v klidu… '+(i+1)+'/'+N;
+    jobs.push({cv:cropGuide(),psm:7,live:true});
+    await new Promise(r=>setTimeout(r,220));
+  }
+  await recognize(jobs);
 }
 function findVin(t){const s=t.toUpperCase().replace(/[^A-Z0-9\n ]/g,'').replace(/[OQ]/g,'0').replace(/I/g,'1').replace(/\s+/g,'');const m=s.match(/[A-HJ-NPR-Z0-9]{17}/);return m?m[0]:null}
 function findSpz(t){const s=t.toUpperCase().replace(/[^A-Z0-9\n ]/g,'');const m=s.match(/\b[0-9][A-Z][A-Z0-9]\s?[0-9]{4}\b/)||s.match(/\b[A-Z0-9]{2,3}\s?[A-Z0-9]{4}\b/);return m?m[0].replace(/\s/g,''):null}
@@ -472,9 +515,10 @@ function findSpz(t){const s=t.toUpperCase().replace(/[^A-Z0-9\n ]/g,'');const m=
 /* ---- Datová kostka ---- */
 function pickDate(v){if(typeof v!=='string')return null;let m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return `${m[1]}-${m[2]}-${m[3]}`;m=v.match(/^(\d{1,2})\.\s?(\d{1,2})\.\s?(\d{4})/);return m?`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`:null}
 function walk(o,f){if(o&&typeof o==='object')for(const k in o){f(k,o[k]);walk(o[k],f)}}
+let lkT=null;
 async function lookup(){
   const b=el('lkb');b.disabled=true;b.textContent='Načítám…';
-  try{await lookupRun()}finally{b.disabled=false;b.textContent='Načíst z Datové kostky'}
+  try{await lookupRun()}finally{clearTimeout(lkT);b.disabled=false;b.textContent='Načíst z Datové kostky'}
 }
 async function lookupRun(){
   const vin=el('vin').value.trim().toUpperCase(),m=el('msg'),sv=(ls('sv_url')||'').replace(/\/$/,'');
@@ -483,6 +527,7 @@ async function lookupRun(){
   if(vin.length!==17){m.textContent='Zadejte nebo naskenujte 17místný VIN.';return}
   if(!key&&(ep===EP||sv)){m.textContent=sv?'Vyplňte token serveru v Zálohách (💾).':'Nejdřív vyplňte API klíč v Nastavení (⚙️). Klíč získáte registrací na dataovozidlech.cz/registraceapi.';return}
   m.textContent='Načítám z Datové kostky…';
+  clearTimeout(lkT);lkT=setTimeout(()=>{m.textContent='Server se probouzí, může to trvat až minutu…'},8000);
   try{
     const r=await fetch(ep+(ep.includes('?')?'&':'?')+'vin='+encodeURIComponent(vin),{headers:key?{api_key:key,Accept:'application/json'}:{Accept:'application/json'}});
     const txt=await r.text();let j=null;try{j=JSON.parse(txt)}catch(e){}
@@ -606,6 +651,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)wake()});
 el('cam').addEventListener('cancel',e=>{e.preventDefault();stopCam()});
 el('techf').innerHTML=TECH.map(([k,l,t])=>`<label>${l}</label>${t==='area'?`<textarea id="t_${k}" rows="3"></textarea>`:`<input id="t_${k}"${t==='date'?' type="date"':''}>`}`).join('');
 load();render();notify();wake();
+setTimeout(()=>{const sp=el('splash');if(sp){sp.classList.add('out');setTimeout(()=>sp.remove(),400)}},700);
 </script>
 </body>
 </html>

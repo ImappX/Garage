@@ -60,7 +60,8 @@ app.get('/api/backup', auth, (req, res) => {
 
 // Jen povolené statické soubory (nic jiného z repozitáře se nezveřejní)
 ['index.html', 'manifest.webmanifest', 'sw.js', 'icon-192.png', 'icon-512.png'].forEach((f) => {
-  app.get('/' + (f === 'index.html' ? '' : f), (req, res) => res.sendFile(path.join(__dirname, f)));
+  const paths = f === 'index.html' ? ['/', '/index.html'] : ['/' + f];
+  app.get(paths, (req, res) => res.sendFile(path.join(__dirname, f)));
 });
 
 app.listen(process.env.PORT || 3000, () => console.log('Garáž běží'));
