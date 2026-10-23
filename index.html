@@ -166,7 +166,7 @@ textarea{resize:vertical}
   <label>Datová kostka – API klíč</label><input id="key" type="password">
   <label>Datová kostka – URL endpointu</label><input id="ep">
   <p class="mu">Údaje se ukládají jen v tomto zařízení. Pokud máte v Zálohách (💾) vyplněný server, načítání z Datové kostky půjde automaticky přes něj a klíč zůstane na serveru. Klíč k Datové kostce dostanete e-mailem po registraci na dataovozidlech.cz/registraceapi.</p>
-  <p class="mu" style="margin-top:12px">Verze aplikace: 22. 10. 2026, v12</p>
+  <p class="mu" style="margin-top:12px">Verze aplikace: 23. 10. 2026, v13</p>
   <div class="acts"><button onclick="saveSet()">Uložit</button><button class="s" onclick="el('set').close()">Zavřít</button></div>
 </dialog>
 
@@ -177,7 +177,7 @@ const EP='https://api.dataovozidlech.cz/api/vehicletechnicaldata/v2';
 const DL=[['stk','STK'],['dz','Dálniční známka'],['pj','Povinné ručení']];
 const TECH=[['reg','Datum 1. registrace','date'],['motor','Typ motoru'],['objem','Zdvihový objem [cm³]'],['vykon','Max. výkon [kW] / [min⁻¹]'],['palivo','Palivo'],['kola','Kola a pneumatiky na nápravě – rozměry/montáž [N.1; N.2; N.3; N.4]','area'],['varp','Další záznamy','area']];
 let lastRaw='',svcId=null,svcEdit=false,techOpen=false,svcOpen=true;
-let cars=[],view='list',curId=null,editing=null,stream=null,target='vin',onScan=null,worker=null,scanConfirm=false,runId=0;
+let cars=[],view='list',curId=null,editing=null,stream=null,target='vin',onScan=null,worker=null,scanConfirm=false,runId=0,lastTry='';
 
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
 function load(){try{cars=JSON.parse(ls('cars')||'[]')}catch(e){cars=[]}}
@@ -341,7 +341,8 @@ function delSvc(cid,sid){ask('Smazat servisní záznam?',()=>{const c=car(cid);c
 /* ---- kamera ---- */
 function mode(m){target=m;el('m-vin').classList.toggle('on',m==='vin');el('m-spz').classList.toggle('on',m==='spz');el('cm').textContent=m==='vin'?'Zarovnejte VIN do zeleného rámečku a klepněte na Vyfotit.':'Zarovnejte SPZ do zeleného rámečku a klepněte na Vyfotit.'}
 async function startLive(){
-  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920}},audio:false})}
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:3840},height:{ideal:2160}},audio:false});
+    try{const tr=stream.getVideoTracks()[0],cap=tr.getCapabilities?tr.getCapabilities():{};if(cap.focusMode&&cap.focusMode.includes('continuous'))await tr.applyConstraints({advanced:[{focusMode:'continuous'}]})}catch(e){}}
   catch(e){stream=null;return false}
   el('v').srcObject=stream;await el('v').play();return true;
 }
@@ -404,7 +405,7 @@ function voteChars(votes,hits){
   }
   return {str,conf};
 }
-async function recognize(jobs){
+async function recognizeSpz(jobs){
   const my=++runId,vin=target==='vin',inn=vin?vinsIn:spzIn;
   const wl=vin?'ABCDEFGHJKLMNPRSTUVWXYZ0123456789':'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ';
   try{
@@ -436,12 +437,100 @@ async function recognize(jobs){
     if(scanConfirm)showRes(best,alts,conf);else{const cb=onScan;stopCam();cb&&cb(best)}
   }catch(e){el('cm').textContent='Chyba: '+e.message;el('snap').disabled=false}
 }
+/* ---- VIN: přísné čtení (17 znaků dohromady, kontrola struktury) ---- */
+const WMI=new Set('TMB TMA TMK TMP WVW WVG WV1 WV2 WAU WUA WBA WBY WDB WDC WDD WDF WF0 WMW W0L WP0 VF1 VF3 VF7 VR3 VSS ZFA ZAR YV1 SAL UU1 KMH KNA JTD JHM JN1 JMZ TRU VNK VXK'.split(' '));
+function vinFix(w){
+  const s=String(w).toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/[OQ]/g,'0').replace(/I/g,'1');
+  if(s.length!==17)return s;
+  const dm={D:'0',L:'1',Z:'2',A:'4',S:'5',G:'6',T:'7',B:'8'};
+  return s.slice(0,13)+s.slice(13).replace(/[A-Z]/g,c=>dm[c]||c);
+}
+function vinValid(s){
+  return /^[A-HJ-NPR-Z0-9]{17}$/.test(s)&&'ABCDEFGHJKLMNPRSTVWXY123456789'.includes(s[9])&&/^[0-9]{4}$/.test(s.slice(13))&&s[0]!=='0'&&new Set(s).size>5;
+}
+function vinCands(text){
+  const out=[],push=(w,wt,strong)=>{const f=vinFix(w);if(vinValid(f))out.push([f,wt+(WMI.has(f.slice(0,3))?1:0),strong])};
+  String(text||'').split('\n').forEach(l=>{
+    const toks=l.toUpperCase().split(/[^A-Z0-9]+/).filter(Boolean);
+    toks.forEach(w=>{if(w.length===17)push(w,3,true)});
+    for(let i=0;i<toks.length;i++){let c='';for(let j=i;j<toks.length&&c.length<17;j++){c+=toks[j];if(c.length===17&&j>i)push(c,2,false)}}
+    const all=toks.join('');
+    if(all.length<=26)for(let i=0;i+17<=all.length;i++)push(all.slice(i,i+17),.5,false);
+  });
+  return out;
+}
+function linesOf(d){
+  if(d.lines&&d.lines.length)return d.lines;
+  const out=[];
+  (d.blocks||[]).forEach(b=>(b.paragraphs||[]).forEach(p=>(p.lines||[]).forEach(l=>out.push(l))));
+  return out;
+}
+function subCanvas(cv,x,y,w,h){
+  const c=document.createElement('canvas');c.width=Math.max(1,Math.round(w));c.height=Math.max(1,Math.round(h));
+  c.getContext('2d').drawImage(cv,x,y,w,h,0,0,c.width,c.height);return c;
+}
+async function recognizeVin(jobs){
+  const my=++runId;
+  try{
+    if(!window.Tesseract)throw new Error('OCR knihovna se nenačetla (je potřeba internet).');
+    if(!worker)worker=await Tesseract.createWorker('eng');
+    const wl='ABCDEFGHJKLMNPRSTUVWXYZ0123456789',votes={},raw={};let n=0;
+    const read=async(cv,psm,mode)=>{
+      if(my!==runId)throw new Error('cancel');
+      el('cm').textContent='Rozpoznávám… ('+(++n)+')';
+      await worker.setParameters({tessedit_char_whitelist:wl,tessedit_pageseg_mode:String(psm),user_defined_dpi:'300'});
+      const r=await worker.recognize(prep(cv,mode),{},{text:true,blocks:true}),d=r.data||{},run=n;
+      vinCands(d.text).forEach(([v,w,strong])=>{const e=votes[v]||(votes[v]={w:0,runs:new Set(),strong:false});e.w+=w;e.runs.add(run);if(strong)e.strong=true});
+      String(d.text||'').toUpperCase().split(/[^A-Z0-9]+/).forEach(t=>{if(t.length===17)raw[t]=(raw[t]||0)+1});
+      return d;
+    };
+    const accepted=()=>Object.entries(votes).filter(([k,v])=>v.runs.size>=2).sort((a,b)=>b[1].w-a[1].w);
+    for(const j of jobs){
+      if(j.photo){
+        const d=await read(j.cv,11,'gray');
+        const ls=linesOf(d).map(l=>({l,len:String(l.text||'').replace(/[^A-Za-z0-9]/g,'').length})).filter(o=>o.len>=11&&o.len<=26&&o.l.bbox).sort((a,b)=>Math.abs(a.len-17)-Math.abs(b.len-17)).slice(0,5);
+        for(const o of ls){
+          const b=o.l.bbox,w=b.x1-b.x0,h=b.y1-b.y0,px=w*.06,py=Math.max(h*.5,14);
+          const x=Math.max(0,b.x0-px),y=Math.max(0,b.y0-py);
+          const c=subCanvas(j.cv,x,y,Math.min(j.cv.width-x,w+2*px),Math.min(j.cv.height-y,h+2*py));
+          for(const m of ['gray','bin','inv'])await read(c,7,m);
+        }
+        if(!accepted().length){
+          for(let i=0;i<6;i++){
+            const y=Math.round(j.cv.height*.14*i),h=Math.min(Math.round(j.cv.height*.22),j.cv.height-y),c=subCanvas(j.cv,0,y,j.cv.width,h);
+            await read(c,7,'gray');await read(c,7,'bin');
+          }
+        }
+      }else await read(j.cv,j.psm||7,'gray');
+    }
+    if(!accepted().length){
+      const s2=jobs[0]&&jobs[0].live?jobs.slice(0,3):[];
+      for(const j of s2)for(const m of ['bin','inv'])await read(j.cv,7,m);
+    }
+    if(my!==runId)return;
+    const acc=accepted();
+    if(!acc.length){
+      const single=Object.entries(votes).sort((a,b)=>b[1].w-a[1].w)[0];
+      lastTry=single?single[0]:(Object.keys(raw).sort((a,b)=>raw[b]-raw[a])[0]||'');
+      el('cm').innerHTML='Nenašel jsem platný VIN (17 znaků dohromady). Zkuste znovu: blíž, rovně, bez odlesků a VIN do zeleného rámečku.'+(lastTry?' <button class="s" style="padding:4px 10px" onclick="showTry()">Zobrazit nejlepší pokus</button>':'');
+      el('snap').disabled=false;return;
+    }
+    const wts={};acc.forEach(([k,v])=>wts[k]=v.w);
+    const top=acc.map(([k])=>k),vc=voteChars(wts,2);
+    let best=vinFix(vc.str);if(!vinValid(best))best=top[0];
+    const conf=best===vc.str?vc.conf:Array(17).fill(1);
+    const alts=top.filter(k=>k!==best).slice(0,3);
+    if(scanConfirm)showRes(best,alts,conf,true);else{const cb=onScan;stopCam();cb&&cb(best)}
+  }catch(e){if(e&&e.message==='cancel')return;el('cm').textContent='Chyba: '+e.message;el('snap').disabled=false}
+}
+function showTry(){showRes(lastTry,[],Array(17).fill(0.2),false)}
+function recognize(jobs){return target==='vin'?recognizeVin(jobs):recognizeSpz(jobs)}
 async function photoPicked(inp){
   const f=inp.files[0];inp.value='';if(!f)return;
   el('cm').textContent='Načítám fotku…';
   try{
     const bmp=await createImageBitmap(f,{imageOrientation:'from-image'});
-    const sc=Math.min(1,2200/Math.max(bmp.width,bmp.height));
+    const sc=Math.min(1,2600/Math.max(bmp.width,bmp.height));
     const cv=document.createElement('canvas');cv.width=Math.round(bmp.width*sc);cv.height=Math.round(bmp.height*sc);
     cv.getContext('2d').drawImage(bmp,0,0,cv.width,cv.height);
     if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
@@ -455,23 +544,22 @@ async function photoPicked(inp){
       jobs.push({cv:b,psm:7});
     }
     jobs.push({cv,psm:11});
-    await recognize(jobs);
+    await recognize(target==='vin'?[{photo:true,cv}]:jobs);
   }catch(e){el('cm').textContent='Chyba: '+e.message}
 }
 function scanMain(){scan('vin',v=>{
   const k=target==='vin'?'vin':'spz',c=cars.find(x=>String(x[k]||'').replace(/\s/g,'')===v);
   if(c){go('detail',c.id)}else{edit();el(k).value=v;if(k==='vin'&&v.length===17)lookup()}
 },true)}
-function showRes(f,alts,conf){
+function showRes(f,alts,conf,valid){
   el('resl').textContent=(target==='vin'?'VIN':'SPZ')+' – rozpoznáno, můžete opravit';
   el('resv').value=f;el('res').hidden=false;el('snap').style.display='none';el('v').pause();
   el('cmap').innerHTML=conf?f.split('').map((ch,i)=>{
     const c=conf[i];let k=c>=.8?'ok':c>=.5?'wa':'er';
-    if(i>=13&&/[BSZGDL]/.test(ch)&&k==='ok')k='wa';
     return `<span class="${k}" style="padding:2px 5px;border-radius:6px;background:var(--s2);font-weight:700">${ch}</span>`;
   }).join(''):'';
   el('alts').innerHTML=(alts||[]).map(a=>`<button class="s" style="padding:6px 10px" onclick="el('resv').value='${a}';el('cmap').innerHTML=''">${a}</button>`).join('');
-  el('cm').textContent=(conf?'Zelené znaky se ve čteních shodly, žluté a červené jsou nejisté, zkontrolujte je podle VIN na voze. ':'')+(alts&&alts.length?'Jiné možnosti vyberete klepnutím. ':'')+'Pak klepněte na Ověřit.';
+  el('cm').textContent=(valid===true?'VIN prošel kontrolou struktury (17 znaků, rok, číslice na konci). ':valid===false?'Tento výsledek neprošel kontrolou struktury VIN, zkontrolujte ho pečlivě. ':'')+(conf&&valid!==false?'Zelené znaky se ve čteních shodly, žluté a červené jsou nejisté. ':'')+(alts&&alts.length?'Jiné možnosti vyberete klepnutím. ':'')+'Pak klepněte na Ověřit.';
 }
 function resOk(){
   const v=el('resv').value.toUpperCase().replace(/\s/g,'');
@@ -488,25 +576,35 @@ async function resAgain(){
   if(!ok)el('cm').textContent='Živá kamera není dostupná. Použijte tlačítko Fotoaparát telefonu.';
 }
 function stopCam(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}el('res').hidden=true;el('pimg').style.display='none';el('v').style.display='';el('snap').style.display='';scanConfirm=false;runId++;el('cam').close()}
-function cropGuide(){
+function guideNorm(){
   const v=el('v'),vr=v.getBoundingClientRect(),gr=el('guide').getBoundingClientRect();
   const sc=Math.max(vr.width/v.videoWidth,vr.height/v.videoHeight);
   const ox=(vr.width-v.videoWidth*sc)/2,oy=(vr.height-v.videoHeight*sc)/2;
-  const sx=Math.max(0,(gr.left-vr.left-ox)/sc),sy=Math.max(0,(gr.top-vr.top-oy)/sc);
-  const sw=Math.min(gr.width/sc,v.videoWidth-sx),sh=Math.min(gr.height/sc,v.videoHeight-sy);
-  const crop=document.createElement('canvas');crop.width=Math.max(1,Math.round(sw));crop.height=Math.max(1,Math.round(sh));
-  crop.getContext('2d').drawImage(v,sx,sy,sw,sh,0,0,crop.width,crop.height);
-  return crop;
+  const x=Math.max(0,(gr.left-vr.left-ox)/sc/v.videoWidth),y=Math.max(0,(gr.top-vr.top-oy)/sc/v.videoHeight);
+  return {x,y,w:Math.min(1-x,gr.width/sc/v.videoWidth),h:Math.min(1-y,gr.height/sc/v.videoHeight)};
+}
+function cropSrc(src,sw0,sh0,r){
+  return subCanvas(src,r.x*sw0,r.y*sh0,r.w*sw0,r.h*sh0);
+}
+async function stillCrop(ic,r,v){
+  const bmp=await createImageBitmap(await ic.takePhoto({fillLightMode:'off'}));
+  if(Math.abs(bmp.width/bmp.height-v.videoWidth/v.videoHeight)>.03){if(bmp.close)bmp.close();throw new Error('poměr stran')}
+  const c=cropSrc(bmp,bmp.width,bmp.height,r);if(bmp.close)bmp.close();return c;
 }
 async function snap(){
   const v=el('v');if(!v.videoWidth)return;
   el('snap').disabled=true;
-  const jobs=[],N=5;
+  const jobs=[],N=5,r=guideNorm();
+  let ic=null;
+  try{if(window.ImageCapture&&stream)ic=new ImageCapture(stream.getVideoTracks()[0])}catch(e){ic=null}
   for(let i=0;i<N;i++){
     if(!el('cam').open)return;
     el('cm').textContent='Držte telefon v klidu… '+(i+1)+'/'+N;
-    jobs.push({cv:cropGuide(),psm:7,live:true});
-    await new Promise(r=>setTimeout(r,220));
+    let cv=null;
+    if(ic&&i<3){try{cv=await stillCrop(ic,r,v)}catch(e){ic=null}}
+    if(!cv)cv=cropSrc(v,v.videoWidth,v.videoHeight,r);
+    jobs.push({cv,psm:7,live:true});
+    await new Promise(res=>setTimeout(res,200));
   }
   await recognize(jobs);
 }

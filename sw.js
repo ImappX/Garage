@@ -1,4 +1,4 @@
-const V='garaz-v12';
+const V='garaz-v13';
 const EXT=['cdn.jsdelivr.net','tessdata.projectnaptha.com'];
 const ok=t=>t.includes('id="app"')&&t.includes('Garáž');
 async function precache(){
